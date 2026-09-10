@@ -23,8 +23,12 @@ import {
   type CategoryKey,
   type NatalSection,
 } from '../interpret/engine.ts';
+import { buildBaziChart, type BaziChart } from '../bazi/chart.ts';
+import { renderBaziResults } from './baziView.ts';
 
 const DRAFT_KEY = 'astro-app:draft:v1';
+
+type SystemKind = 'astrology' | 'bazi';
 
 interface FormState {
   label: string;
@@ -32,6 +36,7 @@ interface FormState {
   profileId: string | null;
   onlineSearch: boolean;
   manualCoord: boolean;
+  system?: SystemKind;
 }
 
 function loadDraft(): FormState {
@@ -62,7 +67,9 @@ function todayISO(): string {
 
 export function renderApp(root: HTMLElement): void {
   const state = loadDraft();
+  if (!state.system) state.system = 'astrology';
   let chart: Chart | null = null;
+  let bazi: BaziChart | null = null;
   let transit: TransitReport | null = null;
   let transitDate = todayISO();
   let activeCategory: CategoryKey = 'overall';
@@ -80,7 +87,10 @@ export function renderApp(root: HTMLElement): void {
   const resultsEl = el('div', { id: 'results' });
   const formCard = el('div', { class: 'card' });
 
+  const introEl = el('div', {});
+
   function rerender(): void {
+    mount(introEl, introCard(state.system ?? 'astrology'));
     renderForm();
     renderResults();
     saveDraft(state);
@@ -164,6 +174,25 @@ export function renderApp(root: HTMLElement): void {
 
     mount(
       formCard,
+      el(
+        'div',
+        { class: 'tabs system-tabs' },
+        ...(['astrology', 'bazi'] as SystemKind[]).map((sys) =>
+          el(
+            'button',
+            {
+              role: 'tab',
+              'aria-selected': String(state.system === sys),
+              onclick: () => {
+                if (state.system === sys) return;
+                state.system = sys;
+                rerender();
+              },
+            },
+            sys === 'astrology' ? '西洋占星術' : '四柱推命',
+          ),
+        ),
+      ),
       profileSelect || undefined,
       el('label', {}, '呼び名（プロフィール名）'),
       el('input', {
@@ -174,6 +203,21 @@ export function renderApp(root: HTMLElement): void {
           saveDraft(state);
         },
       }),
+      el('label', {}, `性別${state.system === 'bazi' ? '（大運の計算に使用）' : '（四柱推命の大運で使用）'}`),
+      el(
+        'select',
+        {
+          value: b.gender ?? '',
+          onchange: (e: Event) => {
+            const v = (e.target as HTMLSelectElement).value;
+            b.gender = v === '' ? null : (v as 'male' | 'female');
+            saveDraft(state);
+          },
+        },
+        el('option', { value: '', selected: !b.gender }, '未指定'),
+        el('option', { value: 'male', selected: b.gender === 'male' }, '男性'),
+        el('option', { value: 'female', selected: b.gender === 'female' }, '女性'),
+      ),
       el(
         'div',
         { class: 'row' },
@@ -397,14 +441,23 @@ export function renderApp(root: HTMLElement): void {
     const { errors } = validateBirthData(state.birth);
     if (errors.length) {
       chart = null;
+      bazi = null;
       renderResults(errors);
       return;
     }
     try {
-      chart = buildChart(state.birth);
-      recomputeTransit();
+      if (state.system === 'bazi') {
+        chart = null;
+        transit = null;
+        bazi = buildBaziChart(state.birth);
+      } else {
+        bazi = null;
+        chart = buildChart(state.birth);
+        recomputeTransit();
+      }
     } catch (err) {
       chart = null;
+      bazi = null;
       renderResults([(err as Error).message]);
       return;
     }
@@ -471,6 +524,11 @@ export function renderApp(root: HTMLElement): void {
   function renderResults(errors?: string[]): void {
     if (errors && errors.length) {
       mount(resultsEl, el('div', { class: 'card' }, ...errors.map((e) => el('div', { class: 'warn' }, e))));
+      return;
+    }
+    if (state.system === 'bazi') {
+      if (bazi) mount(resultsEl, renderBaziResults(bazi, state.label));
+      else mount(resultsEl);
       return;
     }
     if (!chart) {
@@ -607,14 +665,38 @@ export function renderApp(root: HTMLElement): void {
     );
   }
 
-  renderForm();
-  root.append(introCard(), formCard, resultsEl);
+  rerender();
+  root.append(introEl, formCard, resultsEl);
   if (state.birth.date && (state.birth.timeUnknown || state.birth.time) && Number.isFinite(state.birth.location.latitude)) {
     onCalculate();
   }
 }
 
-function introCard(): HTMLElement {
+function introCard(system: SystemKind): HTMLElement {
+  if (system === 'bazi') {
+    return el(
+      'div',
+      { class: 'card intro-card' },
+      el('h2', { style: 'margin-top:0' }, '天文計算にもとづく四柱推命'),
+      el(
+        'p',
+        {},
+        '出生時刻を「真太陽時」に換算し、二十四節気を天文計算で正確に求めたうえで、命式（四柱）を組み立てます。',
+      ),
+      el(
+        'ul',
+        { class: 'intro-list' },
+        el('li', {}, el('strong', {}, '真太陽時'), '：出生地の経度補正に加え、均時差（太陽の実際の進みのズレ）も反映した「日時計の時刻」で時柱・日柱を決めます。'),
+        el('li', {}, el('strong', {}, '節入り'), '：立春など 12 の節を、太陽視黄経が 15°の倍数になる瞬間として算出。公表値と約 1 分で一致。'),
+        el('li', {}, '日柱は連続する六十干支（1949年10月1日＝甲子 を基準）。年柱は', el('strong', {}, '立春'), 'で切り替え、日の境界は 0:00。'),
+      ),
+      el(
+        'p',
+        { class: 'note', style: 'margin-bottom:0' },
+        '※ 命式の算出は暦の計算です。十神・蔵干・強弱などの読み方や配分は流派によって差があります。',
+      ),
+    );
+  }
   return el(
     'div',
     { class: 'card intro-card' },

@@ -213,4 +213,30 @@ td .glyph { color: var(--accent); font-size: 1.05rem; }
 .interp-section.tone-tense { border-left-color: var(--tense); }
 .interp-section.tone-neutral { border-left-color: var(--accent-2); }
 
+/* ---- システム切替タブ ---- */
+.system-tabs { margin-bottom: 14px; }
+.system-tabs button { font-size: 0.9rem; padding: 8px 16px; }
+
+/* ---- 四柱推命 命式表 ---- */
+table.mingshi { width: 100%; border-collapse: collapse; text-align: center; min-width: 320px; }
+table.mingshi th, table.mingshi td {
+  border: 1px solid var(--line); padding: 8px 6px; vertical-align: top;
+}
+table.mingshi thead th { color: var(--accent-2); background: var(--bg-elev-2); }
+table.mingshi tbody th { color: var(--text-dim); font-weight: 600; width: 44px; }
+.gz-stem, .gz-branch { font-size: 1.5rem; font-weight: 700; display: block; }
+table.mingshi .tg { font-size: 0.72rem; color: var(--text-dim); margin-top: 2px; }
+table.mingshi .tg.void { color: var(--tense); }
+.hidden-cell .hs { font-size: 0.8rem; padding: 1px 0; }
+.hidden-cell .hs.command { font-weight: 700; color: var(--text); }
+.hidden-cell .hs-role { color: var(--text-dim); font-size: 0.68rem; margin: 0 3px; }
+.hidden-cell .hs-tg { color: var(--accent-2); font-size: 0.68rem; }
+
+/* ---- 五行バランス ---- */
+.wx-row { display: flex; align-items: center; gap: 8px; margin: 7px 0; font-size: 0.85rem; }
+.wx-label { width: 1.6em; font-weight: 700; flex: 0 0 auto; text-align: center; }
+.wx-bar-track { flex: 1; height: 12px; background: var(--bg-elev-2); border-radius: 6px; overflow: hidden; }
+.wx-bar { display: block; height: 100%; border-radius: 6px; min-width: 2px; }
+.wx-val { flex: 0 0 auto; color: var(--text-dim); font-size: 0.78rem; width: 5.5em; text-align: right; }
+
 .hidden { display: none !important; }

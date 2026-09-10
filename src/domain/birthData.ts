@@ -43,6 +43,11 @@ export interface BirthData {
   tzMode: TimezoneMode;
   /** tzMode==='fixed' のときの UTC オフセット（分、東が正。例: +540 = JST） */
   fixedOffsetMinutes?: number;
+  /**
+   * 性別。四柱推命の大運（順行／逆行）の判定に使用。占星術では未使用。
+   * 未指定なら大運は計算しない。
+   */
+  gender?: 'male' | 'female' | null;
   /** 任意メモ */
   note?: string;
 }
