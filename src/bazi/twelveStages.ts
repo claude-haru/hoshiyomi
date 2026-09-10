@@ -21,6 +21,9 @@ const ORDER: TwelveStage[] = [
   'bing', 'si', 'mu', 'jue', 'tai', 'yang',
 ];
 
+/** 表示順の十二運一覧 */
+export const TWELVE_STAGES_ALL: TwelveStage[] = ORDER;
+
 // 各天干の「長生」の地支 index（子=0）
 // 甲亥 乙午 丙寅 丁酉 戊寅 己酉 庚巳 辛子 壬申 癸卯
 const CHANGSHENG_BRANCH: Record<number, number> = {

@@ -6,6 +6,9 @@ import { TEN_GOD_JA } from '../bazi/tenGods.ts';
 import { TWELVE_STAGE_JA } from '../bazi/twelveStages.ts';
 import { DAY_MASTER_STRENGTH_JA } from '../bazi/wuxing.ts';
 import { activeLuckPeriod, annualPillar } from '../bazi/luckPeriods.ts';
+import { BAZI_GLOSSARY, TEN_GOD_MEANING, TWELVE_STAGE_MEANING } from '../bazi/glossary.ts';
+import { TEN_GODS_ALL } from '../bazi/tenGods.ts';
+import { TWELVE_STAGES_ALL } from '../bazi/twelveStages.ts';
 
 const ROLE_JA = { primary: '本気', middle: '中気', residual: '余気' } as const;
 
@@ -32,8 +35,44 @@ export function renderBaziResults(chart: BaziChart, label: string, opts: BaziVie
   wrap.append(wuXingCard(chart));
   wrap.append(luckCard(chart, opts));
   wrap.append(voidCard(chart));
+  wrap.append(glossaryCard());
 
   return wrap;
+}
+
+function glossaryCard(): HTMLElement {
+  const details = el(
+    'details',
+    { class: 'card glossary-card' },
+    el('summary', {}, '用語の説明（四柱推命に詳しくない人向け）'),
+    el(
+      'dl',
+      { class: 'glossary' },
+      ...BAZI_GLOSSARY.flatMap((t) => [
+        el('dt', {}, t.term, t.reading ? el('span', { class: 'gl-yomi' }, `（${t.reading}）`) : null),
+        el('dd', {}, t.desc),
+      ]),
+    ),
+    el('h3', { style: 'margin-top:14px' }, '十神（通変星）の意味'),
+    el(
+      'dl',
+      { class: 'glossary compact' },
+      ...TEN_GODS_ALL.flatMap((g) => [
+        el('dt', {}, TEN_GOD_JA[g]),
+        el('dd', {}, TEN_GOD_MEANING[g]),
+      ]),
+    ),
+    el('h3', { style: 'margin-top:14px' }, '十二運星の意味'),
+    el(
+      'dl',
+      { class: 'glossary compact' },
+      ...TWELVE_STAGES_ALL.flatMap((s) => [
+        el('dt', {}, TWELVE_STAGE_JA[s]),
+        el('dd', {}, TWELVE_STAGE_MEANING[s]),
+      ]),
+    ),
+  );
+  return details;
 }
 
 function summaryCard(chart: BaziChart, label: string): HTMLElement {
@@ -140,6 +179,7 @@ function mingShiCard(chart: BaziChart): HTMLElement {
     'div',
     { class: 'card' },
     el('h2', {}, '命式表'),
+    el('p', { class: 'note', style: 'margin-top:-4px' }, '4 本の柱（年・月・日・時）。上が天干、下が地支。日柱の天干＝日主（あなた自身）が読みの基準。'),
     el(
       'div',
       { style: 'overflow-x:auto' },
@@ -161,6 +201,7 @@ function wuXingCard(chart: BaziChart): HTMLElement {
     'div',
     { class: 'card' },
     el('h2', {}, '五行バランス'),
+    el('p', { class: 'note', style: 'margin-top:-4px' }, '命式に含まれる木・火・土・金・水の量。少ない五行が「意識して補うとよいもの」を示す。'),
     ...scores.map((s) =>
       el(
         'div',
@@ -184,7 +225,12 @@ function wuXingCard(chart: BaziChart): HTMLElement {
 }
 
 function luckCard(chart: BaziChart, opts: BaziViewOptions): HTMLElement {
-  const card = el('div', { class: 'card' }, el('h2', {}, '大運・流年'));
+  const card = el(
+    'div',
+    { class: 'card' },
+    el('h2', {}, '大運・流年'),
+    el('p', { class: 'note', style: 'margin-top:-4px' }, '大運＝10 年ごとに巡る運気の柱（人生の大きな流れ）。流年＝その年 1 年の運気。'),
+  );
 
   if (!chart.luck) {
     card.append(
@@ -285,8 +331,9 @@ function voidCard(chart: BaziChart): HTMLElement {
     'div',
     { class: 'card' },
     el('h2', {}, '空亡（天中殺）'),
+    el('p', { class: 'note', style: 'margin-top:-4px' }, '日柱から決まる、欠けた 2 つの地支。'),
     el('p', {}, `日柱は ${v.xunName}。空亡は ${v.branches.map((b) => b.ja).join('・')} の 2 支です。`),
-    el('p', { class: 'note' }, '空亡にあたる柱は、その分野で努力が結果に結びつきにくい・見直しが起きやすいとされます。'),
+    el('p', { class: 'note' }, 'この 2 支を持つ柱の分野では、努力が空回りしやすい・結果が遅れる・見直しが起きやすいとされます。命式表で「空亡」と表示された柱がそれです。'),
   );
 }
 

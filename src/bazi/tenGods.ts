@@ -23,6 +23,12 @@ export const TEN_GOD_JA: Record<TenGod, string> = {
   pianyin: '偏印', zhengyin: '印綬',
 };
 
+/** 表示順の十神一覧 */
+export const TEN_GODS_ALL: TenGod[] = [
+  'bijian', 'jiecai', 'shishen', 'shangguan', 'piancai',
+  'zhengcai', 'pianguan', 'zhengguan', 'pianyin', 'zhengyin',
+];
+
 /** 十神の大分類 */
 export type TenGodGroup = 'peer' | 'output' | 'wealth' | 'officer' | 'resource';
 export const TEN_GOD_GROUP: Record<TenGod, TenGodGroup> = {

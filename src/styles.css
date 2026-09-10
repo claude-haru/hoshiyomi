@@ -247,4 +247,27 @@ table.luck-table tr.active-luck { background: rgba(255, 212, 121, 0.14); }
 table.luck-table tr.active-luck td { color: var(--text); font-weight: 600; }
 .gz-inline { font-size: 1.05rem; font-weight: 700; }
 
+/* ---- 用語の説明 ---- */
+.glossary-card > summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--accent-2);
+  font-size: 0.95rem;
+  list-style-position: inside;
+}
+.glossary-card[open] > summary { margin-bottom: 10px; }
+.glossary-card h3 { color: var(--accent); font-size: 0.88rem; }
+dl.glossary { margin: 0; }
+dl.glossary dt {
+  font-weight: 700; color: var(--text); font-size: 0.9rem; margin-top: 10px;
+}
+dl.glossary dd {
+  margin: 2px 0 0; color: var(--text-dim); font-size: 0.86rem;
+}
+dl.glossary .gl-yomi { color: var(--text-dim); font-weight: 400; font-size: 0.8rem; }
+dl.glossary.compact dt { display: inline; margin-top: 0; }
+dl.glossary.compact dt::after { content: '：'; }
+dl.glossary.compact dd { display: inline; margin: 0; }
+dl.glossary.compact dd::after { content: ''; display: block; margin-bottom: 6px; }
+
 .hidden { display: none !important; }
