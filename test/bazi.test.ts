@@ -85,6 +85,50 @@ test('buildBaziChart：構造とバランス', () => {
   assert.ok(chart.voids.branches.length === 2);
 });
 
+test('十二運星：日主 甲・乙 の既知の段階', async () => {
+  const { twelveStage, TWELVE_STAGE_JA } = await import('../src/bazi/twelveStages.ts');
+  const { BRANCHES } = await import('../src/bazi/ganzhi.ts');
+  const b = (ja: string) => BRANCHES.find((x) => x.ja === ja)!.index;
+  assert.equal(TWELVE_STAGE_JA[twelveStage(S('甲'), b('亥'))], '長生');
+  assert.equal(TWELVE_STAGE_JA[twelveStage(S('甲'), b('子'))], '沐浴');
+  assert.equal(TWELVE_STAGE_JA[twelveStage(S('甲'), b('卯'))], '帝旺');
+  assert.equal(TWELVE_STAGE_JA[twelveStage(S('乙'), b('午'))], '長生'); // 陰干は逆行
+  assert.equal(TWELVE_STAGE_JA[twelveStage(S('乙'), b('寅'))], '帝旺');
+  assert.equal(TWELVE_STAGE_JA[twelveStage(S('丙'), b('寅'))], '長生');
+});
+
+test('大運：方向と起運、干支の連続', () => {
+  // 1990-06-15 男性、庚午年（庚＝陽）→ 順行
+  const chart = buildBaziChart({
+    ...birth('1990-06-15', '08:30'),
+    location: { name: '東京', latitude: 35.6895, longitude: 139.6917, timezone: 'Asia/Tokyo' },
+    gender: 'male',
+  });
+  assert.ok(chart.luck);
+  assert.equal(chart.luck!.direction, 'forward');
+  // 起運：小暑(7/7)まで約22日 → 約7歳台
+  assert.ok(chart.luck!.startAge > 6 && chart.luck!.startAge < 9, `起運 ${chart.luck!.startAge.toFixed(2)}歳`);
+  // 大運[0] は月柱の次の干支
+  const monthIdx = chart.pillars.month.ganZhi.index;
+  assert.equal(chart.luck!.periods[0].ganZhi.index, (monthIdx + 1) % 60);
+  assert.equal(chart.luck!.periods[1].ganZhi.index, (monthIdx + 2) % 60);
+  // 女性なら逆行
+  const f = buildBaziChart({
+    ...birth('1990-06-15', '08:30'),
+    location: { name: '東京', latitude: 35.6895, longitude: 139.6917, timezone: 'Asia/Tokyo' },
+    gender: 'female',
+  });
+  assert.equal(f.luck!.direction, 'backward');
+  assert.equal(f.luck!.periods[0].ganZhi.index, ((monthIdx - 1) % 60 + 60) % 60);
+});
+
+test('流年：西暦から干支', async () => {
+  const { annualPillar } = await import('../src/bazi/luckPeriods.ts');
+  assert.equal(annualPillar(2024, S('甲')).ganZhi.ja, '甲辰');
+  assert.equal(annualPillar(2025, S('甲')).ganZhi.ja, '乙巳');
+  assert.equal(annualPillar(1990, S('甲')).ganZhi.ja, '庚午');
+});
+
 test('bracketingTerms：清明2024の前後', () => {
   // 2024-04-10 は清明(04-04)の後、穀雨は中気なので次の節は立夏(05-05)
   const b = bracketingTerms(new Date(Date.UTC(2024, 3, 10)));

@@ -72,6 +72,7 @@ export function renderApp(root: HTMLElement): void {
   let bazi: BaziChart | null = null;
   let transit: TransitReport | null = null;
   let transitDate = todayISO();
+  let baziYear = new Date().getFullYear();
   let activeCategory: CategoryKey = 'overall';
 
   function recomputeTransit(): void {
@@ -527,7 +528,18 @@ export function renderApp(root: HTMLElement): void {
       return;
     }
     if (state.system === 'bazi') {
-      if (bazi) mount(resultsEl, renderBaziResults(bazi, state.label));
+      if (bazi) {
+        mount(
+          resultsEl,
+          renderBaziResults(bazi, state.label, {
+            asOfYear: baziYear,
+            setAsOfYear: (y) => {
+              baziYear = y;
+              renderResults();
+            },
+          }),
+        );
+      }
       else mount(resultsEl);
       return;
     }

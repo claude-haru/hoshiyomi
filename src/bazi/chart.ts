@@ -1,16 +1,18 @@
 /**
  * 命式（四柱推命のチャート）の組み立て。
- * 出生の瞬間（UTC）＋緯度経度から、四柱・蔵干・十神・五行バランス・空亡をまとめる。
- * 大運・流年はフェーズB、カテゴリ別解釈はフェーズCで追加する。
+ * 出生の瞬間（UTC）＋緯度経度から、四柱・蔵干・十神・十二運・五行バランス・空亡・大運をまとめる。
+ * カテゴリ別解釈はフェーズCで追加する。
  */
-import type { BirthData } from '../domain/birthData.ts';
+import type { BirthData, BirthMoment } from '../domain/birthData.ts';
 import { resolveBirthMoment } from '../geo/timezone.ts';
 import type { Branch, GanZhi, Stem } from './ganzhi.ts';
 import { computeFourPillars, type FourPillars, type Pillar } from './pillars.ts';
 import { hiddenStemsOf, monthCommandStem, type HiddenRole } from './hiddenStems.ts';
 import { tenGod, type TenGod } from './tenGods.ts';
+import { twelveStage, type TwelveStage } from './twelveStages.ts';
 import { analyzeWuXing, type WuXingAnalysis } from './wuxing.ts';
 import { voidBranchesOf, type VoidBranches } from './voidBranches.ts';
+import { computeLuckCycle, type LuckCycle } from './luckPeriods.ts';
 
 export interface HiddenStemDetail {
   stem: Stem;
@@ -30,10 +32,13 @@ export interface PillarDetail {
   branch: Branch;
   /** 地支が空亡にあたるか */
   isVoid: boolean;
+  /** 日主から見た、この柱の地支の十二運 */
+  twelveStage: TwelveStage;
 }
 
 export interface BaziChart {
   birth: BirthData;
+  moment: BirthMoment;
   pillars: FourPillars;
   dayMaster: Stem;
   monthCommand: Stem;
@@ -41,6 +46,8 @@ export interface BaziChart {
   details: PillarDetail[];
   wuxing: WuXingAnalysis;
   voids: VoidBranches;
+  /** 性別が指定されていれば大運サイクル */
+  luck: LuckCycle | null;
   warnings: string[];
 }
 
@@ -94,10 +101,15 @@ export function buildBaziChart(birth: BirthData): BaziChart {
       branch,
       isVoid: voidSet.has(branch.index),
       hidden,
+      twelveStage: twelveStage(dayMaster, branch.index),
     };
   });
 
   const wuxing = analyzeWuXing(pillars, monthCommand);
+  const luck =
+    birth.gender === 'male' || birth.gender === 'female'
+      ? computeLuckCycle(pillars, birth.gender, moment.date)
+      : null;
 
-  return { birth, pillars, dayMaster, monthCommand, daysSinceTerm, details, wuxing, voids, warnings };
+  return { birth, moment, pillars, dayMaster, monthCommand, daysSinceTerm, details, wuxing, voids, luck, warnings };
 }

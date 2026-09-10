@@ -239,4 +239,12 @@ table.mingshi .tg.void { color: var(--tense); }
 .wx-bar { display: block; height: 100%; border-radius: 6px; min-width: 2px; }
 .wx-val { flex: 0 0 auto; color: var(--text-dim); font-size: 0.78rem; width: 5.5em; text-align: right; }
 
+/* ---- 大運表 ---- */
+table.luck-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; min-width: 380px; }
+table.luck-table th, table.luck-table td { border-bottom: 1px solid var(--line); padding: 7px 8px; text-align: left; }
+table.luck-table thead th { color: var(--text-dim); }
+table.luck-table tr.active-luck { background: rgba(255, 212, 121, 0.14); }
+table.luck-table tr.active-luck td { color: var(--text); font-weight: 600; }
+.gz-inline { font-size: 1.05rem; font-weight: 700; }
+
 .hidden { display: none !important; }
