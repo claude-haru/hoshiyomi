@@ -537,6 +537,11 @@ export function renderApp(root: HTMLElement): void {
               baziYear = y;
               renderResults();
             },
+            activeCategory,
+            setActiveCategory: (k) => {
+              activeCategory = k;
+              renderResults();
+            },
           }),
         );
       }

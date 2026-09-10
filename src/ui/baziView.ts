@@ -9,6 +9,8 @@ import { activeLuckPeriod, annualPillar } from '../bazi/luckPeriods.ts';
 import { BAZI_GLOSSARY, TEN_GOD_MEANING, TWELVE_STAGE_MEANING } from '../bazi/glossary.ts';
 import { TEN_GODS_ALL } from '../bazi/tenGods.ts';
 import { TWELVE_STAGES_ALL } from '../bazi/twelveStages.ts';
+import { analyzeBaziCategory } from '../interpret/bazi/engine.ts';
+import { CATEGORY_META, CATEGORY_KEYS, type CategoryKey, type NatalSection } from '../interpret/engine.ts';
 
 const ROLE_JA = { primary: '本気', middle: '中気', residual: '余気' } as const;
 
@@ -19,6 +21,8 @@ const ELEMENT_COLOR: Record<WuXing, string> = {
 export interface BaziViewOptions {
   asOfYear: number;
   setAsOfYear: (y: number) => void;
+  activeCategory: CategoryKey;
+  setActiveCategory: (k: CategoryKey) => void;
 }
 
 export function renderBaziResults(chart: BaziChart, label: string, opts: BaziViewOptions): HTMLElement {
@@ -35,9 +39,53 @@ export function renderBaziResults(chart: BaziChart, label: string, opts: BaziVie
   wrap.append(wuXingCard(chart));
   wrap.append(luckCard(chart, opts));
   wrap.append(voidCard(chart));
+  wrap.append(categoryCard(chart, opts));
   wrap.append(glossaryCard());
 
   return wrap;
+}
+
+function sectionEl(s: NatalSection): HTMLElement {
+  return el(
+    'div',
+    { class: `interp-section tone-${s.tone}` },
+    el('h3', {}, s.title),
+    ...s.body.split('\n').map((line) => el('p', { style: 'margin:2px 0 0' }, line)),
+  );
+}
+
+function categoryCard(chart: BaziChart, opts: BaziViewOptions): HTMLElement {
+  const a = analyzeBaziCategory(chart, opts.activeCategory, opts.asOfYear);
+  return el(
+    'div',
+    { class: 'card' },
+    el('h2', {}, 'カテゴリ別に見る'),
+    el(
+      'div',
+      { class: 'tabs' },
+      ...CATEGORY_KEYS.map((k) =>
+        el(
+          'button',
+          {
+            role: 'tab',
+            'aria-selected': String(k === opts.activeCategory),
+            onclick: () => opts.setActiveCategory(k),
+          },
+          CATEGORY_META[k].ja,
+        ),
+      ),
+    ),
+    el('p', { class: 'note' }, a.intro),
+    el('h3', { class: 'interp-group' }, '命式が示す傾向'),
+    ...a.sections.map(sectionEl),
+    a.timing &&
+      el(
+        'div',
+        {},
+        el('h3', { class: 'interp-group' }, `いまの時期（${opts.asOfYear}年）`),
+        ...a.timing.map(sectionEl),
+      ),
+  );
 }
 
 function glossaryCard(): HTMLElement {

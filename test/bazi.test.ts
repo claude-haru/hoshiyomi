@@ -129,6 +129,33 @@ test('流年：西暦から干支', async () => {
   assert.equal(annualPillar(1990, S('甲')).ganZhi.ja, '庚午');
 });
 
+test('カテゴリ別解釈：6カテゴリぶんセクションが出る', async () => {
+  const { analyzeBaziCategory } = await import('../src/interpret/bazi/engine.ts');
+  const { CATEGORY_KEYS } = await import('../src/interpret/engine.ts');
+  const chart = buildBaziChart({
+    ...birth('1978-03-25', '15:20'),
+    location: { name: '大阪', latitude: 34.6937, longitude: 135.5023, timezone: 'Asia/Tokyo' },
+    gender: 'male',
+  });
+  for (const k of CATEGORY_KEYS) {
+    const a = analyzeBaziCategory(chart, k, 2026);
+    assert.ok(a.sections.length >= 1, `${a.ja}: セクションあり`);
+    assert.ok(a.timing && a.timing.length >= 1, `${a.ja}: 時期セクションあり（性別あり）`);
+    for (const s of a.sections) {
+      assert.ok(s.body.length > 10, `${a.ja} / ${s.title}: 本文あり`);
+      assert.ok(!/undefined|NaN|\[object/.test(s.body), `${a.ja} / ${s.title}: 変な文字列なし`);
+    }
+  }
+});
+
+test('カテゴリ別解釈：性別なしなら大運セクションなし', async () => {
+  const { analyzeBaziCategory } = await import('../src/interpret/bazi/engine.ts');
+  const chart = buildBaziChart(birth('1978-03-25', '15:20'));
+  const a = analyzeBaziCategory(chart, 'overall', 2026);
+  assert.equal(a.timing, null);
+  assert.ok(a.sections.length >= 1);
+});
+
 test('bracketingTerms：清明2024の前後', () => {
   // 2024-04-10 は清明(04-04)の後、穀雨は中気なので次の節は立夏(05-05)
   const b = bracketingTerms(new Date(Date.UTC(2024, 3, 10)));
